@@ -2,6 +2,7 @@
 
 **Project Title:** Multi-Modal Driver Vigilance, Ergonomic Posture & Emergency Route Guidance System  
 **Lead Author & Maintainer:** Arghya Chatterjee  
+**Collaborators & Contributors:** [@ankurlol](https://github.com/ankurlol), [@Manan482](https://github.com/Manan482)  
 **Open-Source Repository:** [https://github.com/Arghya3169/driver-vigilance-system](https://github.com/Arghya3169/driver-vigilance-system)  
 **License:** MIT License  
 **Environment Target:** Python 3.10+ / Windows 10/11 x64  

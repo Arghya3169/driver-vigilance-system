@@ -1,4 +1,4 @@
-﻿import os
+import os
 import sys
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
@@ -501,7 +501,7 @@ def build_project_report_pdf(filename="Project_Report_Driver_Vigilance_System.pd
         ["Resource / Element", "Link / Value", "Description"],
         ["GitHub Repository", "github.com/Arghya3169/driver-vigilance-system", "Public source repository with version control and issue tracking."],
         ["Lead Maintainer", "Arghya Chatterjee (criju4000@gmail.com)", "Project creator and system architecture lead."],
-        ["Contributor", "@ankurlol", "Collaborator and open-source contributor."],
+        ["Contributors", "@ankurlol, @Manan482", "Collaborators and open-source contributors."],
         ["License", "MIT Open-Source License", "Permissive commercial and educational reuse terms."],
         ["Model Assets", "models/face_landmarker.task (3.75 MB)", "Pre-packaged neural models for zero-dependency cloning."],
         ["Automated Launcher", "run.bat", "1-Click automated Windows startup batch script."]

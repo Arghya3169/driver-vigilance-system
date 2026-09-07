@@ -254,7 +254,14 @@ Contributions are very welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) f
 
 ---
 
+## 👥 Contributors
+
+- [Arghya Chatterjee](https://github.com/Arghya3169) (Creator & Lead Maintainer)
+- [@ankurlol](https://github.com/ankurlol) (Contributor)
+- [@Manan482](https://github.com/Manan482) (Collaborator & Contributor)
+
+---
+
 ## 📄 License
 
 Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for more information.
-Contributed by Ankur
