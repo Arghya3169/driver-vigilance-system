@@ -56,3 +56,8 @@ htmlcov/
 # Antigravity & local tools
 .agents/
 close_apps.bat
+
+# Large dataset downloads (keep lightweight samples)
+dataset/raw/
+dataset/*.zip
+dataset/*.tar.gz

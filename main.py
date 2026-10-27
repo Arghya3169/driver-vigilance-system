@@ -53,14 +53,24 @@ def run_opencv_mode(args):
     hud = HUDRenderer()
     synth = SyntheticDriverGenerator()
 
-    # Open camera if not forced synth
+    # Open camera or dataset video if not forced synth
     cap = None
     use_synth = args.synth
+    is_video_file = bool(args.video)
+
     if not use_synth:
-        cap = cv2.VideoCapture(args.camera, cv2.CAP_DSHOW if os.name == 'nt' else cv2.CAP_ANY)
-        if not cap.isOpened():
-            print(f"[Notice] Camera {args.camera} unavailable. Starting Synthetic Driver Simulator.")
-            use_synth = True
+        if args.video:
+            cap = cv2.VideoCapture(args.video)
+            if not cap.isOpened():
+                print(f"[Error] Failed to open dataset video: {args.video}. Falling back to simulator.")
+                use_synth = True
+            else:
+                print(f"[Video Feed] Successfully loaded dataset video: {args.video}")
+        else:
+            cap = cv2.VideoCapture(args.camera, cv2.CAP_DSHOW if os.name == 'nt' else cv2.CAP_ANY)
+            if not cap.isOpened():
+                print(f"[Notice] Camera {args.camera} unavailable. Starting Synthetic Driver Simulator.")
+                use_synth = True
 
     # State toggles
     t_eyes_closed = False
@@ -86,8 +96,13 @@ def run_opencv_mode(args):
             frame = None
             if not use_synth and cap is not None and cap.isOpened():
                 ret, c_frame = cap.read()
+                if not ret and is_video_file:
+                    # Loop video from start on EOF
+                    cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                    ret, c_frame = cap.read()
                 if ret and c_frame is not None:
-                    frame = cv2.flip(c_frame, 1)
+                    # Mirror camera only; do not mirror pre-recorded dataset videos
+                    frame = cv2.flip(c_frame, 1) if not is_video_file else c_frame
 
             if frame is None:
                 frame = synth.generate_frame()
@@ -214,6 +229,7 @@ def main():
     parser = argparse.ArgumentParser(description="Driver Vigilance & Multi-Modal Fatigue Safety System")
     parser.add_argument("--mode", choices=["gui", "opencv", "cli"], default="gui", help="Interface mode: 'gui' (Tkinter Dashboard), 'opencv' (direct HUD window), or 'cli'")
     parser.add_argument("--camera", type=int, default=0, help="Camera device index (default: 0)")
+    parser.add_argument("--video", type=str, default=None, help="Path to pre-recorded video file (e.g. from UTA-RLDD dataset) to analyze")
     parser.add_argument("--synth", action="store_true", help="Force synthetic driver simulation feed")
     parser.add_argument("--no-sound", action="store_true", help="Disable acoustic beep alarm")
     parser.add_argument("--no-voice", action="store_true", help="Disable voice speech alerts")
@@ -221,7 +237,7 @@ def main():
 
     if args.mode == "gui":
         from ui.dashboard import launch_dashboard
-        launch_dashboard()
+        launch_dashboard(video_path=args.video)
     elif args.mode == "opencv":
         run_opencv_mode(args)
     else:

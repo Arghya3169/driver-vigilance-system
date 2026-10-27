@@ -142,6 +142,34 @@ python main.py
 python main.py --mode opencv
 ```
 
+**Method 4 (Analyze Pre-Recorded Dataset Video / UTA-RLDD):**
+```bash
+python main.py --video path/to/clip.mp4
+```
+
+---
+
+## 📊 Empirical Dataset Benchmark (UTA-RLDD Integration)
+
+The system includes a built-in empirical evaluation suite for the **University of Texas at Arlington Real-Life Drowsiness Dataset (UTA-RLDD)**:
+
+```bash
+# 1. Synthesize miniature benchmark sample clips and evaluate immediately:
+python benchmark_utarldd.py --generate-samples
+
+# 2. Run against a local / downloaded UTA-RLDD dataset folder:
+python benchmark_utarldd.py --dataset-dir "C:/path/to/UTA-RLDD"
+
+# 3. Evaluate a single dataset video sequence:
+python benchmark_utarldd.py --video "dataset/utarldd_samples/Subject_01/10_drowsy.mp4"
+```
+
+The benchmark computes:
+- **3-Class Confusion Matrix** (Alert [0], Low Vigilance [5], Drowsy [10])
+- **Binary Metrics**: Accuracy, Sensitivity (Recall), Specificity, Precision, and $F_1$-Score
+- **Edge Inference Throughput** (FPS)
+- Automatically publishes a detailed Markdown report: `UTARLDD_BENCHMARK_REPORT.md` and raw telemetry JSON: `utarldd_benchmark_results.json`.
+
 ---
 
 ## 🎮 Interactive Cockpit Modes & Hotkeys

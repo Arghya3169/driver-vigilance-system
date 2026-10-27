@@ -11,7 +11,7 @@ import sys
 import threading
 import time
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, filedialog
 from typing import Dict, Optional
 
 import cv2
@@ -32,7 +32,7 @@ class VigilanceDashboard:
     Main Cockpit GUI application (Ocular + Posture multi-factor vigilance).
     """
 
-    def __init__(self, root: tk.Tk):
+    def __init__(self, root: tk.Tk, initial_video_path: Optional[str] = None):
         self.root = root
         self.root.title("Driver Vigilance Safety System (EAR, MAR & Seat Posture)")
         self.root.geometry("1280x820")
@@ -48,9 +48,10 @@ class VigilanceDashboard:
         self.synthetic_driver = SyntheticDriverGenerator()
 
         # Video source state
-        self.source_mode = "synthetic"  # "synthetic" or "webcam"
+        self.source_mode = "synthetic"  # "synthetic", "webcam", or "video_file"
         self.cap: Optional[cv2.VideoCapture] = None
         self.webcam_index = 0
+        self.video_file_path: Optional[str] = None
         self.is_running = True
 
         # FPS calculation
@@ -68,8 +69,11 @@ class VigilanceDashboard:
         self._setup_styles()
         self._build_layout()
 
-        # Try auto-detecting camera
-        self._check_webcam_availability()
+        # Try auto-detecting camera or loading initial video
+        if initial_video_path and os.path.exists(initial_video_path):
+            self._set_video_file(initial_video_path)
+        else:
+            self._check_webcam_availability()
 
         # Start Video & Processing Loop
         self.root.after(20, self._process_frame_loop)
@@ -143,6 +147,17 @@ class VigilanceDashboard:
         )
         self.source_cb.pack(side=tk.LEFT, padx=6, pady=8)
         self.source_cb.bind("<<ComboboxSelected>>", self._on_source_change)
+
+        self.btn_load_video = tk.Button(
+            vid_ctrls,
+            text="📂 Load Video / UTA-RLDD...",
+            bg="#00695c",
+            fg="#ffffff",
+            relief="groove",
+            font=("Segoe UI", 8, "bold"),
+            command=self._on_load_video_file
+        )
+        self.btn_load_video.pack(side=tk.LEFT, padx=6, pady=8)
 
         self.btn_recalibrate = tk.Button(
             vid_ctrls,
@@ -367,6 +382,38 @@ class VigilanceDashboard:
         else:
             self._set_synthetic()
 
+    def _on_load_video_file(self):
+        path = filedialog.askopenfilename(
+            title="Select Video File (UTA-RLDD Dataset / MP4)",
+            filetypes=[("Video Files", "*.mp4;*.avi;*.mov;*.mkv"), ("All Files", "*.*")]
+        )
+        if path:
+            self._set_video_file(path)
+
+    def _set_video_file(self, path: str):
+        if self.cap is not None:
+            self.cap.release()
+            self.cap = None
+        try:
+            self.cap = cv2.VideoCapture(path)
+            if self.cap.isOpened():
+                self.source_mode = "video_file"
+                self.video_file_path = path
+                fname = os.path.basename(path)
+                display_label = f"File: {fname}"
+                vals = list(self.source_cb["values"])
+                if display_label not in vals:
+                    vals.append(display_label)
+                    self.source_cb["values"] = vals
+                self.source_var.set(display_label)
+                # Reset posture baseline for the video
+                self.posture_detector.is_calibrated = False
+                return
+        except Exception as e:
+            messagebox.showerror("Video Error", f"Could not load video file:\n{e}")
+        self.source_cb.current(0)
+        self._set_synthetic()
+
     def _set_webcam(self, idx: int):
         if self.cap is not None:
             self.cap.release()
@@ -473,16 +520,21 @@ class VigilanceDashboard:
 
         # 1. Acquire Frame
         frame = None
-        if self.source_mode == "webcam" and self.cap is not None and self.cap.isOpened():
+        if self.source_mode in ("webcam", "video_file") and self.cap is not None and self.cap.isOpened():
             ret, cam_frame = self.cap.read()
+            if not ret and self.source_mode == "video_file":
+                # Replay dataset video from start on EOF
+                self.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                ret, cam_frame = self.cap.read()
             if ret and cam_frame is not None:
-                frame = cv2.flip(cam_frame, 1)
+                # Mirror live webcam for natural mirror view; do not mirror pre-recorded dataset clips
+                frame = cv2.flip(cam_frame, 1) if self.source_mode == "webcam" else cam_frame
 
         if frame is None:
             frame = self.synthetic_driver.generate_frame()
 
         # 2. Vision & Ocular Processing
-        if self.source_mode == "webcam":
+        if self.source_mode in ("webcam", "video_file"):
             ocular_data = self.vision_detector.process_frame(frame)
         else:
             # Synthetic simulation mode
@@ -686,9 +738,9 @@ class VigilanceDashboard:
         self.root.destroy()
 
 
-def launch_dashboard():
+def launch_dashboard(video_path: Optional[str] = None):
     root = tk.Tk()
-    app = VigilanceDashboard(root)
+    app = VigilanceDashboard(root, initial_video_path=video_path)
     root.protocol("WM_DELETE_WINDOW", app.on_close)
     root.mainloop()
 
