@@ -1,4 +1,4 @@
-﻿# Byte-compiled / optimized / DLL files
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
@@ -52,3 +52,7 @@ htmlcov/
 
 # Logs
 *.log
+
+# Antigravity & local tools
+.agents/
+close_apps.bat
